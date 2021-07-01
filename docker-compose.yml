@@ -8,8 +8,8 @@ services:
     # depends_on:
     #   - "blog-admin-app"
     build:
-      context: ..
-      dockerfile: SimplisticBlogger/blog/Dockerfile
+      context: .
+      dockerfile: blog/Dockerfile
     env_file: ".env"
     ports:
       - "9010:${FLASK_BLOG_PORT}"
@@ -21,8 +21,8 @@ services:
     # depends_on:
     #   - "mysql_db"
     build:
-      context: ..
-      dockerfile: SimplisticBlogger/blog_admin/Dockerfile
+      context: .
+      dockerfile: blog_admin/Dockerfile
     env_file: ".env"
     ports:
       - "9000:${FLASK_ADMIN_PORT}"
