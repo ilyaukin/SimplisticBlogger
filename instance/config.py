@@ -22,6 +22,8 @@ class Config(object):
     MAIL_PASSWORD = environ.get("MAIL_PASSWORD")
     MAIL_DEBUG = False
     db_uri = DB_DRIVER + "://" + DB_USER + ":" + DB_PASSWORD + "@" + DB_HOST + ":" + DB_PORT + "/" + DATABASE_NAME
+    if (DB_DRIVER == 'mysql'):
+        db_uri += "?charset=utf8mb4"
 
 
 class DevelopmentConfig(Config):
