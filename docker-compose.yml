@@ -4,7 +4,7 @@ networks:
 services:
   blog-app:
     container_name: "blog_app"
-    restart: "always"
+    restart: "unless-stopped"
     # depends_on:
     #   - "blog-admin-app"
     build:
@@ -17,7 +17,7 @@ services:
       - "backend-network"
   blog-admin-app:
     container_name: "blog_admin"
-    restart: "always"
+    restart: "unless-stopped"
     # depends_on:
     #   - "mysql_db"
     build:
