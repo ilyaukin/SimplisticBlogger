@@ -41,8 +41,8 @@ function add_post(blog_title, blog_author, blog_content, blog_tags) {
         error: function (data) {
             console.log(data);
             $("#log").empty();
-            $("#log").append(data);
-            $("#log").show().fadeOut(3000,"linear");
+            $("#log").append(data.responseText || data.statusText);
+            $("#log").show();
         }
     });
 }
@@ -85,8 +85,8 @@ function delete_post(blog_title, closest_tr) {
         error: function (data) {
             console.log(data);
             $("#log").empty();
-            $("#log").append(data);
-            $("#log").show().fadeOut(3000,"linear");
+            $("#log").append(data.responseText || data.statusText);
+            $("#log").show();
         }
     });
 
@@ -133,7 +133,7 @@ function edit_post(blog_title, blog_content, old_title, blog_tags) {
         error: function (data) {
             console.log(data);
             $("#log").empty();
-            $("#log").append(data);
+            $("#log").append(data.responseText || data.statusText);
             $("#log").show();
         }
     });

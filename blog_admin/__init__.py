@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv, find_dotenv
 from instance.config import app_config
 from flask_login import LoginManager
-from common import  db, cache
+from common import db, cache
 from flask_wtf.csrf import CSRFProtect
 from common import mail
 
@@ -41,24 +41,27 @@ def create_admin_app(config_name):
 
     with app.app_context():
         from common.services.users_service import UserService
-        
+
         db.create_all()
 
-        
-
-        #Query table to check if admin is already present then simply do not create a user...
+        # Query table to check if admin is already present then simply do not
+        # create a user...
 
         # Create the admin user as per configs
         user_obj = UserService()
         admin = user_obj.query_single_user(user_name=username)
         if admin == -1:
             print("Creating the user for the first time")
-            return_type = user_obj.create_user(username, generate_password_hash(password), f_name, email)
+            return_type = user_obj.create_user(username,
+                                               generate_password_hash(password),
+                                               f_name, email)
             if return_type == -1:
-                print("There has been an error while creating the admin user. Check logs")
+                print(
+                    "There has been an error while creating the admin user. "
+                    "Check logs")
             else:
                 print("Admin user has been created and can be logged in")
-        
+
         from common.models import users_model
         @login_manager.user_loader
         def load_user(user_id):
@@ -78,8 +81,10 @@ def create_admin_app(config_name):
         app.register_blueprint(api_controller.api_bp)
         app.register_blueprint(auth_controller.auth_bp, url_prefix="/admin")
         app.register_blueprint(posts_controller.posts_bp, url_prefix="/admin")
-        app.register_blueprint(comments_controller.comments_bp, url_prefix="/admin")
-        app.register_blueprint(posts_api_controller.posts_api_bp, url_prefix="/api")
+        app.register_blueprint(comments_controller.comments_bp,
+                               url_prefix="/admin")
+        app.register_blueprint(posts_api_controller.posts_api_bp,
+                               url_prefix="/api")
         app.register_blueprint(images_api_controller.image_bp)
         app.register_blueprint(comments_api_controller.comments_bp)
 
