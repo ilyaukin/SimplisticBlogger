@@ -22,23 +22,8 @@ function add_comment(author_name, author_email, author_comment, g_recaptcha, blo
             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
                 xhr.setRequestHeader("X-CSRFToken", csrftoken)
             }
-
-            // Text processing to understand the comment type
-            var comment_arr = author_comment.split(" ");
-            if (author_name.length <= 3){
-                $("<strong class='log-info'>The author name must be greater than 3 characters</strong>").prependTo("#log");
-                $("#log").show().fadeOut(25000, "linear");
-                this.abort();
-            }
-
-            else if (author_comment === "") {
+            if (author_comment.trim() === "") {
                 $("<strong class='log-info'>The comment cannot be empty!</strong>").prependTo("#log");
-                $("#log").show().fadeOut(25000, "linear");
-                this.abort();
-            }
-
-            else if (comment_arr.length <=3){
-                $("<strong class='log-info'>The comment should atleast contain 3 or more words</strong>").prependTo("#log");
                 $("#log").show().fadeOut(25000, "linear");
                 this.abort();
             }
@@ -51,7 +36,7 @@ function add_comment(author_name, author_email, author_comment, g_recaptcha, blo
         },
         error: function (data) {
             console.log(data);
-            $('<strong class="log-info">' + data + '</strong>').prependTo("#log");
+            $('<strong class="log-info">' + data.responseText || data.statusText + '</strong>').prependTo("#log");
             $("#log").show().fadeOut(25000,"linear");
             $('#add-form-comment')[0].reset();
         }
