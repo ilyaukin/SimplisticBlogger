@@ -40,7 +40,7 @@ def add_comment():
                                                 author_comment, post_data[0],
                                                 is_admin=is_admin):
                 if is_admin:
-                    c_status = comments_service.CommentService.send_email(
+                    c_status = comments_service.CommentService.notify_on_reply(
                         author_comment, author_name, post_data[0])
                     if c_status:
                         # Admin and it is a reply
@@ -51,6 +51,8 @@ def add_comment():
                     return "Your comment is posted"
 
                 # Commented but not admin
+                comments_service.CommentService.notify_on_new_comment(
+                    author_comment, author_name, post_data[0])
                 return "Your comment is posted and is under moderation"
 
             # Internal error

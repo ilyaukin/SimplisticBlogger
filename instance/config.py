@@ -15,9 +15,9 @@ class Config(object):
     DB_USER = environ.get("DB_USER")
     DB_PASSWORD = environ.get("DB_PASSWORD")
     DATABASE_NAME = environ.get("DB_NAME")
-    MAIL_SERVER = "smtp.gmail.com"
-    MAIL_PORT = 465
-    MAIL_USE_SSL = True
+    MAIL_SERVER = environ.get('MAIL_SERVER')
+    MAIL_PORT = environ.get('MAIL_PORT', 25)
+    MAIL_USE_SSL = False
     MAIL_USERNAME = environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = environ.get("MAIL_PASSWORD")
     MAIL_DEBUG = False

@@ -9,7 +9,8 @@ from sqlalchemy import exc
 from common import db
 from common.models import comments_model
 from common.services.comment_state_enums import States
-from common.services.utility import send_email, check_reply
+from common.util import mail_utility
+from common.util.mail_utility import sendmail
 
 
 class CommentService():
@@ -73,21 +74,6 @@ class CommentService():
             return False
 
     @classmethod
-    def send_email(cls, author_comment, author_name, post_db_obj):
-        c_name_tuple, c_status = check_reply(author_comment, post_db_obj)
-        if c_name_tuple and c_status:
-            e_status = send_email(author_comment, author_name, c_name_tuple,
-                                  post_db_obj)
-            if e_status:
-                print("The reply email is sent to -- ", c_name_tuple[0])
-                return True
-            else:
-                print("error while sending the email reply")
-                return False
-        else:
-            return False
-
-    @classmethod
     def get_comment_count(cls, is_admin=False):
         try:
             if is_admin:
@@ -121,9 +107,6 @@ class CommentService():
     def get_comment(self):
         pass
 
-    def delete_comment(self):
-        pass
-
     def edit_comment(self, comment_ref_id, comment_status):
         try:
             # If the status is reject delete from db
@@ -147,3 +130,62 @@ class CommentService():
             traceback.print_exc()
             return {"resp": False,
                     "message": "Internal System Error has occurred"}
+
+    def delete_comment(self):
+        pass
+
+    @classmethod
+    def notify_on_new_comment(cls, author_comment, author_name, post):
+        """
+        notify the admin on new comment submitted
+        @param author_comment comment text
+        @param author_name commenter name
+        @param post post DB object
+        @return if notification is successful or not
+        """
+        return sendmail(os.environ.get('EMAIL'), mail_utility.NEW_COMMENT,
+                        {
+                            'name': os.environ.get('F_NAME'),
+                            'comment': author_comment,
+                            'commenter_name': author_name,
+                            'title': post.title,
+                        })
+
+    @classmethod
+    def check_reply(cls, comment, post):
+        """
+        check if the comment contains replies to
+        some other comments (by mentions in format of @name:)
+        @param comment comment text
+        @param post post DB object
+        @return tuple of comment author, comment email of the comments
+        referred to.
+        """
+        refer_names = list()
+        words_list = comment.split(" ")
+        for word in words_list:
+            if len(word) >= 3 and "@" in word[0] and ":" in word[len(word) - 1]:
+                refer_names.append(word.replace("@", "").replace(":", ""))
+        for name in refer_names:
+            comment_data = comments_model.Comments.query.filter(
+                comments_model.Comments.author_name.like("%" + name + "%"),
+                comments_model.Comments.post_id == post.p_id).first()
+            if comment_data.author_name:
+                yield comment_data.author_name, comment_data.author_email
+
+    @classmethod
+    def notify_on_reply(cls, author_comment, author_name, post):
+        for name, email in cls.check_reply(author_comment, post):
+            e_status = sendmail(email, mail_utility.COMMENT_REPLY,
+                                {
+                                    'name': name,
+                                    'comment': author_comment,
+                                    'commenter_name': author_name,
+                                    'title': post.title,
+                                })
+            if e_status:
+                print("The reply email is sent to -- ", email)
+                return True
+            else:
+                print("error while sending the email reply")
+                return False
