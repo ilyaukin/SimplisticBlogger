@@ -80,10 +80,10 @@ $(document).ready(function(){
                 var image = $("<img>").attr("src",filename).addClass("img-fluid");
                 $("#summernote").summernote("insertNode", image[0]);
             },
-            error: function(data){
-                console.log(data);
+            error: function(resp){
+                console.log(resp);
                 $("#log").empty();
-                $("#log").append(data);
+                $("#log").append(resp.responseText || resp.statusText);
                 $("#log").show();
             }
         });
@@ -117,7 +117,7 @@ $(document).ready(function(){
             error: function(resp){
                 console.log(resp);
                 $("#log").empty();
-                $("#log").append(resp);
+                $("#log").append(resp.responseText || resp.statusText);
                 $("#log").show();
             }
         });

@@ -24,7 +24,7 @@ Important part of the setup is the centered with env_template, let us look that 
 | CACHE_TYPE | Default Flask caching | Defaults:simple |
 | CACHE_DEFAULT_TIMEOUT | Default caching timeout | Default:300s |
 | SECRET_KEY | Flask Secret | Strong secret |
-| UPLOAD_FOLDER | Folder to hold the uploaded content | Defaults:uploads |
+| UPLOAD_FOLDER | Folder to hold the uploaded content | Defaults:/uploads |
 | ADMIN_USERNAME | root username for blog admin | username as String |
 | PASSWORD | root user initial password | password as String |
 | F_NAME | root user name, for posting | String |

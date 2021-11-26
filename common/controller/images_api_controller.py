@@ -1,66 +1,54 @@
-from flask import (Blueprint,send_from_directory, request, abort)
-import os
-from flask_login import login_required
 import datetime
-from werkzeug.utils import secure_filename
+import os
 import traceback
+
+from flask import (Blueprint, request)
+from flask_login import login_required
+from sqlalchemy import exc
+from werkzeug.utils import secure_filename
+
 from common import db
 from common.models.images_model import Images
-from sqlalchemy import exc
-
 
 image_bp = Blueprint("image_api", __name__)
 
-# Allowed files to be uploaded
-ALLOWED_EXTENSIONS = set(["png", "jpg", "jpeg", "gif"])
+# Relative path so implying cwd == root of the app
+PATH = "static/upload"
+if not os.path.exists(PATH):
+    os.symlink(os.environ.get('UPLOAD_FOLDER'), PATH)
 
 
-def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-@image_bp.route("/image_upload", methods=["GET", "POST"])
+@image_bp.route("/image_upload", methods=["POST"])
 @login_required
-def upload_images():
-    if request.method == "POST":
-        file = request.files["image"]
-        current_dm = str(datetime.datetime.now()).split(".")[0].split(" ")[0].replace("-","")
+def upload_image():
+    file = request.files["image"]
 
-        if file.filename == "":
-            return "error.png"
-        if file and allowed_file(file.filename):
-            try:
-                filename = secure_filename(file.filename)
-                if not os.path.exists(os.environ.get("UPLOAD_FOLDER") + "/" + current_dm):
-                    os.makedirs(os.environ.get("UPLOAD_FOLDER") + "/" + current_dm)
-                file.save(os.path.normpath(os.path.join(os.environ.get("UPLOAD_FOLDER"),
-                                                        current_dm, filename)))
-                set_url = "".join("/image/" + current_dm + "/" + file.filename)
-                return set_url
-            except Exception:
-                traceback.print_exc()
-                abort(500)
-                return "Internal Error, check logs"
+    try:
+        filename = _make_unique_filename(file)
+        file_path = os.path.join(PATH, filename)
+        file.save(file_path)
+        return _get_image_url(file_path)
+    except Exception:
+        traceback.print_exc()
+        return "Internal Error, check logs", 500
+
 
 @image_bp.route("/image_delete", methods=["POST"])
 @login_required
 def delete_image():
     try:
         payload = request.get_json()
-        image_file = payload["image_file"]
-        image_path_list = image_file.split("/")
-        blog_post_val = image_path_list[len(image_path_list) - 2]
-        image_file_name = image_path_list[len(image_path_list) - 1]
-        image_rel_url = "/image" + "/" + blog_post_val + "/" + image_file_name
+        filename = payload["image_file"].split("/")[-1]
 
-        #file location removal
-        os.remove(os.environ.get("UPLOAD_FOLDER") + "/" + blog_post_val + "/" + image_file_name)
-        
-        image = Images.query.filter_by(image_url=image_rel_url).first()
+        # file location removal
+        file_path = os.path.join(PATH, filename)
+        os.remove(file_path)
+
+        image = Images.query.filter_by(image_url=_get_image_url(file_path))\
+            .first()
         if image:
-            #Remove from database
-            #database
+            # Remove from database
+            # database
             db.session.delete(image)
             db.session.commit()
 
@@ -68,12 +56,31 @@ def delete_image():
 
     except (FileNotFoundError, exc.SQLAlchemyError):
         traceback.print_exc()
-        return "File cannot be delete, check logs !!!"
+        return "File cannot be delete, check logs !!!", 500
 
-@image_bp.route("/image/<curr_dm>/<filename>", methods=["GET"])
-def get_image(curr_dm, filename):
+
+def _make_unique_filename(file):
+    file_name = secure_filename(file.filename)
     try:
-        dir_abs_path = os.path.dirname(os.path.abspath(os.environ.get("UPLOAD_FOLDER")))
-        return send_from_directory(dir_abs_path + "\\" + os.environ.get("UPLOAD_FOLDER") + "\\" + str(curr_dm), filename)
-    except FileNotFoundError:
-        abort(404)
+        i = file_name.rindex('.')
+        file_ext = file_name[i:]  # with '.'
+        file_name = file_name[:i]
+    except ValueError:
+        file_ext = '.' + file.content_type.split('/')[
+            -1]  # process 'image/jpeg' etc...
+
+    path = os.path.join(PATH, file_name + file_ext)
+    if not os.path.exists(path):
+        return file_name + file_ext
+    for i in range(100):
+        file_name_mod = file_name + "-" + \
+                        datetime.datetime.now().strftime('%Y%m%d%H%M%S%f') \
+                        + '_' + str(i)
+        path = os.path.join(PATH, file_name_mod + file_ext)
+        if not os.path.exists(path):
+            return file_name_mod + file_ext
+    raise Exception("Desperately failed to make a unique file name")
+
+
+def _get_image_url(file_path):
+    return "/" + file_path
