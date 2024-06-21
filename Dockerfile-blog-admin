@@ -1,17 +1,16 @@
 FROM python:3.7.9-slim
 RUN apt-get update && apt-get install -y gcc && apt-get install -y default-libmysqlclient-dev
 
-COPY blog /app/blog
-COPY requirements.txt /app/blog
+COPY blog_admin /app/blog_admin
+COPY requirements.txt /app/blog_admin
 COPY common /app/common
 COPY instance /app/instance
-COPY .env /app/blog
-WORKDIR /app/blog
+#COPY .env /app/blog_admin
+WORKDIR /app/blog_admin
 
 RUN pip install --upgrade pip
 
 RUN pip install -r requirements.txt
 
-CMD flask run --host ${FLASK_HOST} --port ${FLASK_BLOG_PORT}
-
-#CMD ["flask", "run", "--port ${FLASK_BLOG_PORT}"]
+CMD flask run --host ${FLASK_HOST} --port ${FLASK_ADMIN_PORT}
+#CMD ["flask", "run", "--port ${FLASK_ADMIN_PORT}"]
